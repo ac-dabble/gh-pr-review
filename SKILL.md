@@ -15,10 +15,12 @@ Use this skill when you need to:
 - Reply to review comments programmatically
 - Resolve or unresolve review threads
 - Create and submit PR reviews with inline comments
+- Delete comments from pending reviews
 - Access PR review context for automated workflows
 - Filter reviews by state, reviewer, or resolution status
 
 This tool is particularly useful for:
+
 - Automated PR review workflows
 - LLM-based code review agents
 - Terminal-based PR review processes
@@ -54,6 +56,7 @@ gh pr-review review view
 ```
 
 **Useful filters:**
+
 - `--unresolved` - Only show unresolved threads
 - `--reviewer <login>` - Filter by specific reviewer
 - `--states <APPROVED|CHANGES_REQUESTED|COMMENTED|DISMISSED>` - Filter by review state
@@ -115,7 +118,7 @@ gh pr-review review --add-comment \
   -R owner/repo <pr-number>
 ```
 
-Or read the comment body from a file (use `"-"` for stdin):
+Read the comment body from a file (use `"-"` for stdin):
 
 ```sh
 gh pr-review review --add-comment \
@@ -123,6 +126,14 @@ gh pr-review review --add-comment \
   --path <file-path> \
   --line <line-number> \
   --body-file comment.md \
+  -R owner/repo <pr-number>
+```
+
+Delete a comment from pending review (requires comment node ID PRRC\_...):
+
+```sh
+gh pr-review review --delete-comment \
+  --comment-id <PRRC_...> \
   -R owner/repo <pr-number>
 ```
 
@@ -207,13 +218,17 @@ gh pr-review review view --unresolved --not_outdated
 1. Start: `gh pr-review review --start`
 2. Add comments: `gh pr-review review --add-comment --review-id <PRR_...> --path <file> --line <num> --body "..."`
 3. Submit: `gh pr-review review --submit --review-id <PRR_...> --event REQUEST_CHANGES --body "Summary"`
+4. Start: `gh pr-review review --start -R owner/repo <pr>`
+5. Add comments: `gh pr-review review --add-comment -R owner/repo <pr> --review-id <PRR_...> --path <file> --line <num> --body "..."`
+6. Delete comments: `gh pr-review review --delete-comment -R owner/repo <pr> --comment-id <PRRC_...>`
+7. Submit: `gh pr-review review --submit -R owner/repo <pr> --review-id <PRR_...> --event REQUEST_CHANGES --body "Summary"`
 
 ## Important Notes
 
-- All IDs use GraphQL format (PRR_... for reviews, PRRT_... for threads)
+- All IDs use GraphQL format (PRR*... for reviews, PRRT*... for threads)
 - Commands use pure GraphQL (no REST API fallbacks)
 - Empty arrays `[]` are returned when no data matches filters
-- The `--include-comment-node-id` flag adds PRRC_... IDs when needed
+- The `--include-comment-node-id` flag adds PRRC\_... IDs when needed
 - Thread replies are sorted by created_at ascending
 
 ## Documentation Links
