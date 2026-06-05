@@ -33,6 +33,7 @@ func newReviewCommand() *cobra.Command {
 	cmd.Flags().BoolVar(&opts.Start, "start", false, "Open a pending review")
 	cmd.Flags().BoolVar(&opts.AddComment, "add-comment", false, "Add an inline comment to a pending review")
 	cmd.Flags().BoolVar(&opts.DeleteComment, "delete-comment", false, "Delete a comment from a pending review")
+	cmd.Flags().BoolVar(&opts.EditComment, "edit-comment", false, "Edit a comment in a pending review")
 	cmd.Flags().BoolVar(&opts.Submit, "submit", false, "Submit a pending review")
 
 	cmd.Flags().StringVar(&opts.Commit, "commit", "", "Commit SHA for review start (defaults to current head)")
@@ -61,6 +62,7 @@ type reviewOptions struct {
 	Start         bool
 	AddComment    bool
 	DeleteComment bool
+	EditComment   bool
 	Submit        bool
 
 	Commit    string
@@ -77,7 +79,7 @@ type reviewOptions struct {
 }
 
 func runReview(cmd *cobra.Command, opts *reviewOptions) error {
-	actions := []bool{opts.Start, opts.AddComment, opts.DeleteComment, opts.Submit}
+	actions := []bool{opts.Start, opts.AddComment, opts.DeleteComment, opts.EditComment, opts.Submit}
 	enabled := 0
 	for _, flag := range actions {
 		if flag {
@@ -85,7 +87,7 @@ func runReview(cmd *cobra.Command, opts *reviewOptions) error {
 		}
 	}
 	if enabled != 1 {
-		return errors.New("specify exactly one of --start, --add-comment, --delete-comment, or --submit")
+		return errors.New("specify exactly one of --start, --add-comment, --delete-comment, --edit-comment, or --submit")
 	}
 
 	inferPR(opts.Selector, &opts.Pull)
@@ -116,6 +118,8 @@ func runReview(cmd *cobra.Command, opts *reviewOptions) error {
 		return executeReviewAddComment(cmd, service, identity, opts)
 	case opts.DeleteComment:
 		return executeReviewDeleteComment(cmd, service, identity, opts)
+	case opts.EditComment:
+		return executeReviewEditComment(cmd, service, identity, opts)
 	default: // Submit
 		return executeReviewSubmit(cmd, service, identity, opts)
 	}
@@ -188,6 +192,29 @@ func executeReviewDeleteComment(cmd *cobra.Command, service *reviewsvc.Service, 
 		return err
 	}
 	return encodeJSON(cmd, map[string]string{"status": "Comment deleted successfully"})
+}
+
+func executeReviewEditComment(cmd *cobra.Command, service *reviewsvc.Service, pr resolver.Identity, opts *reviewOptions) error {
+	commentID := strings.TrimSpace(opts.CommentID)
+	if commentID == "" {
+		return errors.New("--comment-id is required")
+	}
+	if !strings.HasPrefix(commentID, "PRRC_") {
+		return fmt.Errorf("invalid --comment-id %q: must be a GraphQL node id (PRRC_...)", opts.CommentID)
+	}
+	trimmedBody := strings.TrimSpace(opts.Body)
+	if trimmedBody == "" {
+		return errors.New("--body is required")
+	}
+
+	input := reviewsvc.UpdateCommentInput{
+		CommentID: commentID,
+		Body:      trimmedBody,
+	}
+	if err := service.UpdateComment(pr, input); err != nil {
+		return err
+	}
+	return encodeJSON(cmd, map[string]string{"status": "Comment updated successfully"})
 }
 
 func executeReviewSubmit(cmd *cobra.Command, service *reviewsvc.Service, pr resolver.Identity, opts *reviewOptions) error {

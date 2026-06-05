@@ -16,6 +16,7 @@ Use this skill when you need to:
 - Resolve or unresolve review threads
 - Create and submit PR reviews with inline comments
 - Delete comments from pending reviews
+- Edit comments in pending reviews
 - Access PR review context for automated workflows
 - Filter reviews by state, reviewer, or resolution status
 
@@ -119,7 +120,6 @@ gh pr-review review --add-comment \
 ```
 
 Read the comment body from a file (use `"-"` for stdin):
-
 ```sh
 gh pr-review review --add-comment \
   --review-id <PRR_...> \
@@ -130,15 +130,21 @@ gh pr-review review --add-comment \
 ```
 
 Delete a comment from pending review (requires comment node ID PRRC\_...):
-
 ```sh
 gh pr-review review --delete-comment \
   --comment-id <PRRC_...> \
   -R owner/repo <pr-number>
 ```
 
-Submit the review:
+Edit a comment in pending review (requires comment node ID PRRC_...):
+```sh
+gh pr-review review --edit-comment \
+  --comment-id <PRRC_...> \
+  --body "Updated comment text" \
+  -R owner/repo <pr-number>
+```
 
+Submit the review:
 ```sh
 gh pr-review review --submit \
   --review-id <PRR_...> \
@@ -221,7 +227,8 @@ gh pr-review review view --unresolved --not_outdated
 4. Start: `gh pr-review review --start -R owner/repo <pr>`
 5. Add comments: `gh pr-review review --add-comment -R owner/repo <pr> --review-id <PRR_...> --path <file> --line <num> --body "..."`
 6. Delete comments: `gh pr-review review --delete-comment -R owner/repo <pr> --comment-id <PRRC_...>`
-7. Submit: `gh pr-review review --submit -R owner/repo <pr> --review-id <PRR_...> --event REQUEST_CHANGES --body "Summary"`
+7. Edit comments: `gh pr-review review --edit-comment -R owner/repo <pr> --comment-id <PRRC_...> --body "Updated text"`
+8. Submit: `gh pr-review review --submit -R owner/repo <pr> --review-id <PRR_...> --event REQUEST_CHANGES --body "Summary"`
 
 ## Important Notes
 
