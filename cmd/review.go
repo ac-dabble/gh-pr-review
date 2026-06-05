@@ -42,7 +42,9 @@ func newReviewCommand() *cobra.Command {
 	cmd.Flags().IntVar(&opts.StartLine, "start-line", 0, "Start line for multi-line comments")
 	cmd.Flags().StringVar(&opts.StartSide, "start-side", "", "Start side for multi-line comments")
 	cmd.Flags().StringVar(&opts.Body, "body", "", "Comment or review body")
+	cmd.Flags().StringVar(&opts.BodyFile, "body-file", "", "Read body from file (use \"-\" for stdin)")
 	cmd.Flags().StringVar(&opts.Event, "event", opts.Event, "Review submission event (APPROVE, COMMENT, REQUEST_CHANGES)")
+	cmd.MarkFlagsMutuallyExclusive("body", "body-file")
 
 	cmd.AddCommand(newReviewViewCommand())
 
@@ -66,6 +68,7 @@ type reviewOptions struct {
 	StartLine int
 	StartSide string
 	Body      string
+	BodyFile  string
 	Event     string
 }
 
@@ -82,6 +85,12 @@ func runReview(cmd *cobra.Command, opts *reviewOptions) error {
 	}
 
 	inferPR(opts.Selector, &opts.Pull)
+	body, err := resolveBody(opts.Body, opts.BodyFile)
+	if err != nil {
+		return err
+	}
+	opts.Body = body
+
 	selector, err := resolver.NormalizeSelector(opts.Selector, opts.Pull)
 	if err != nil {
 		return err

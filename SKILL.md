@@ -72,6 +72,14 @@ gh pr-review comments reply <pr-number> -R owner/repo \
   --body "Your reply message"
 ```
 
+Alternatively, read the reply from a file (use `"-"` for stdin):
+
+```sh
+gh pr-review comments reply <pr-number> -R owner/repo \
+  --thread-id <PRRT_...> \
+  --body-file reply.md
+```
+
 ### 3. List Review Threads
 
 Get a filtered list of review threads:
@@ -104,6 +112,17 @@ gh pr-review review --add-comment \
   --path <file-path> \
   --line <line-number> \
   --body "Your comment" \
+  -R owner/repo <pr-number>
+```
+
+Or read the comment body from a file (use `"-"` for stdin):
+
+```sh
+gh pr-review review --add-comment \
+  --review-id <PRR_...> \
+  --path <file-path> \
+  --line <line-number> \
+  --body-file comment.md \
   -R owner/repo <pr-number>
 ```
 
